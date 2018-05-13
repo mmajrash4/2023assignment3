@@ -40,9 +40,10 @@ of Actors interacting in the sample code. Implemented:
 * A set of Messages that the GameActor can reply with
 * SpinningDuck, a sample tank Actor
 
-But there is still some work for you to do.
+But there is still some work for you to do -- see the tasks below.
 
-Each Player is an Actor. You'll need to define classes for them,
+First, though, a little about the tanks/players.
+Each Player is an Actor. To define a new kind of tank AI, you'd need to define classes for them,
 and have `Main` ask the actor system to create them. 
 An example, `SpinningDuck` is provided. Take a look at it to see how
 to work with Actors and sending messages.
