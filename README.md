@@ -11,7 +11,7 @@ need to write, but also just by working with the code that is written for you, y
 will encounter and work with Actor and ReactiveStream code.
 
 ### RoboScala
-![screenshot720.png](RoboScala)
+![RoboScala](screenshot720.png)
 
 Each AI pilots a robotic tank on a virtual battlefield. 
 Each tank has a body, a turret, and a radar. The radar is
