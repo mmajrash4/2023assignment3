@@ -73,7 +73,7 @@ class GameUI(gameState: => GameState, commands: => Map[String, Set[Command]]) {
   frame.add(commandsPanel, BorderLayout.WEST)
   frame.add(startButton, BorderLayout.SOUTH)
   frame.setSize(1024, 768)
-  frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
+  frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
   frame.setVisible(true)
 
   /** Called by the game actor to request the game panel be repainted */
