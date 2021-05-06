@@ -31,10 +31,7 @@ class CommandStreamActor extends Actor {
 
   /** Holds the queues that commands should also be published to -- see assignment. */
   private val streams = mutable.Queue.empty[SourceQueue[(String, Command)]]
-
-  /** An implicit materialiser for when you want to run any Flows */
-  implicit val materialiser = ActorMaterializer()
-
+  
   /** Given a Sink, creates a source queue such that it can publish to that sink by pushing to the queue */
   def registerStream[Mat](sink:Sink[(String, Command), Mat]) = {
     val source = Source.queue[(String, Command)](10, OverflowStrategy.backpressure)
