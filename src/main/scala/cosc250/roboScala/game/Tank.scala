@@ -1,8 +1,7 @@
-package cosc250.roboScala
+package cosc250.roboScala.game
 
 import java.awt.{Color, Polygon, Shape}
 import java.awt.geom.{AffineTransform, Arc2D, Ellipse2D, Rectangle2D}
-
 
 /**
   * The current state of a tank
@@ -46,7 +45,7 @@ case class Tank(name:String,
   def canPing:Boolean = isAlive && energy > Tank.radarPower
 
   /** Called by the GameActor to work out what happens to the tank. */
-  def update(dt:Double, commands:Set[Command]):Tank = {
+  def updated(dt:Double, commands:Seq[TankCommand]):Tank = {
 
     val nextPos = position + Vec2.fromRTheta(velocity, facing) * dt
     val nextVelocity = velocity * 0.9
@@ -57,6 +56,7 @@ case class Tank(name:String,
       energy = Math.min(this.energy + Tank.rechargePower, Tank.startingEnergy)
     )
 
+    import TankCommand.*
     commands.foldLeft(stateBeforeCommands) {
 
       case (tank, FullSpeedAhead) =>
@@ -191,11 +191,12 @@ object Tank {
   )
 
   /** Create a new tank in a random location. */
-  def random(name:String) = Tank(
+  def random(name:String, color:java.awt.Color) = Tank(
     name = name,
     position=Vec2(20 + Math.random() * 600, 20 + Math.random() * 440),
     facing = Math.random() * Math.PI * 2,
-    health = 100, energy = 100
+    health = 100, energy = 100,
+    color = color
   )
 
 

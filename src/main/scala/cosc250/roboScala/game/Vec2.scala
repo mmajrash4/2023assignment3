@@ -1,4 +1,4 @@
-package cosc250.roboScala
+package cosc250.roboScala.game
 
 import scala.util.Random
 

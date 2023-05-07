@@ -1,14 +1,14 @@
 lazy val root = (project in file(".")).
   settings(
     name := "cosc250assignment3",
-    version := "2022.0",
-    scalaVersion := "3.1.1"
+    version := "2023.0",
+    scalaVersion := "3.2.2"
   )
 
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
 libraryDependencies ++= Seq(
-  ("com.typesafe.akka" % "akka-actor" % "2.6.19").cross(CrossVersion.for3Use2_13),
-  ("com.typesafe.akka" % "akka-actor-typed" % "2.6.19").cross(CrossVersion.for3Use2_13),
-  ("com.typesafe.akka" % "akka-stream" % "2.6.19").cross(CrossVersion.for3Use2_13),
+  "com.wbillingsley" %% "amdram" % "0.0.0+6-099e455a-SNAPSHOT"
 )
 
 libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test

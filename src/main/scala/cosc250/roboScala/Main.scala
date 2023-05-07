@@ -4,53 +4,49 @@ import java.awt.BorderLayout
 import java.util.{Timer, TimerTask}
 import javax.swing.{JFrame, JPanel}
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.stream.{ActorMaterializer, OverflowStrategy}
-import akka.stream.scaladsl.{Flow, Sink, Source}
+import java.awt.Color
+
+import com.wbillingsley.amdram.* 
+
+import scala.concurrent.* 
+import ExecutionContext.Implicits.global
+
+import game.*
 
 /**
   * The actor system is a top-level "given" instance so that it is automatically found where it
-  * is needed - e.g. its "materializer" will be picked up by Flows when you run them, so that the
-  * actions in the flow are run on the ActorSystem.
+  * is needed
   */
-given actorSystem:ActorSystem = ActorSystem.create("RoboScala")
+given troupe:Troupe = SingleEcTroupe()
 
-object Main {
+/* A timer that will send tick messages */
+val timer = new Timer
 
-  /* The game actor is created as Main is loaded */
-  val gameActor:ActorRef = actorSystem.actorOf(GameActor.props)
+/** Called by the button on the GameUI */
+def startGame():Unit = {
+  val task = new TimerTask {
+    def run():Unit = { gameActor ! GameControl.Tick(System.currentTimeMillis()) }
+  }
+  timer.schedule(task, 16L, 16L)
+}
 
-  /* The game actor is created as Main is loaded */
-  val insultsActor:ActorRef = actorSystem.actorOf(InsultsActor.props)
-
-  /* The game actor is created as Main is loaded */
-  val commandStreamActor:ActorRef = actorSystem.actorOf(CommandStreamActor.props)
-
-
-  /* A timer that will send tick messages */
-  val timer = new Timer
-
-
-  def main(args:Array[String]):Unit = {
+@main def main() = {
 
     /*
-     * Let's create the actors for the players. They should register themselves
+     * Let's register the players.
+     * The Register message takes a name stem. (The game will affix a random 4-character suffix to it to get the bot's name.)
+     * It also takes a color to show the tank in.
+     * And a function from `name:String` => MessageHandler[Message]. i.e. the behaviour the bot should start with.
+     * In the examples below, bots.spinningDuck is a function of type String => MessageHandler[Message], so we can just pass the function.
+     * 
+     * For a bot with slightly more state, see insultingDuck further down.
      */
-    actorSystem.actorOf(Props(classOf[SpinningDuck]))
-    actorSystem.actorOf(Props(classOf[SpinningDuck]))
+    gameActor ! GameControl.Register("Spinning Duck", Color.orange, bots.spinningDuck)
+    gameActor ! GameControl.Register("Spinning Duck", Color.yellow, bots.spinningDuck)
 
-    // To add InsultingDuck, uncomment this:
-    //actorSystem.actorOf(Props(classOf[InsultingDuck]))
-
-  }
-
-  /** Called by the button on the GameUI */
-  def startGame():Unit = {
-    val task = new TimerTask {
-      def run():Unit = { gameActor ! Tick(System.currentTimeMillis()) }
-    }
-    timer.schedule(task, 16L, 16L)
-  }
-
+    // Note that because insultingDuck's behaviour method takes more than just its name as a state argument, we've
+    // made a function (String) => MessageHandler, by defaulting the other argument that insultingDuck needs
+    gameActor ! GameControl.Register("Insulting Duck", Color.pink, (name:String) => bots.insultingDuck(name, Seq.empty))     
 
 }
+

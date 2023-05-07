@@ -1,66 +1,56 @@
 package cosc250.roboScala
 
-import akka.actor.{Actor, Props}
-import akka.stream.{ActorMaterializer, OverflowStrategy}
-import akka.stream.scaladsl.{Sink, Source, SourceQueue}
+import com.wbillingsley.amdram.* 
+import iteratees.*
+import scala.collection.immutable.Queue
 
-import scala.collection.mutable
-import akka.event.Logging
-import akka.util.Timeout
+import cosc250.roboScala.*
+import game.*
 
-import akka.actor.{Actor, ActorRef, Props}
-import akka.pattern.{AskTimeoutException, ask}
-import akka.util.Timeout
-
-import scala.concurrent.Future
+import scala.concurrent.*
 import scala.concurrent.duration._
 
-object CommandStreamActor {
-  def props = Props(classOf[CommandStreamActor])
-}
+import ExecutionContext.Implicits.global
+
+
+case class RegisterSink(iter:Iteratee[(String, Command),_])
 
 /**
-  * Receives all the commands from the game, and allows UIs to register reactive stream sinks to receive them
+  * The commandStreamActor is responsible for sending out a listenable stream of every tank command happening 
+  * in the game. It is defined by this behaviour:
+  *
+  * For every subscriber request, it maintains an unbounded queue. This means that whenever a 
+  * `(name, command)` touple comes in, it can immediately push it out to all queues, without having to block on 
+  * whether any recipients were ready to receive it.
+  * 
+  * @param subscribers
+  * @param ec
+  * @return
   */
-class CommandStreamActor extends Actor {
+def commandStreamBehaviour(
+  subscribers:Queue[UnboundedBuffer[(String, Command)]]
+)(
+  using ec:ExecutionContext
+):MessageHandler[(String, Command) | RegisterSink] = MessageHandler { (msg, context) =>
 
-  import context.dispatcher
-  implicit val timeout:Timeout = 1.seconds
+  msg match 
+    case RegisterSink(iter) =>
+      // Create a new buffer for this recipient (because it might not process messages quickly)
+      // This buffer will do its work sending the messages on to recipients on an implicit execution context
+      val buffer = UnboundedBuffer[(String, Command)]()
 
-  val log = Logging(context.system, this)
+      // Tell the buffer to send out every message it receives to the subscriber
+      buffer.foldOver(iter)
 
-  /** Holds the queues that commands should also be published to -- see assignment. */
-  private val streams = mutable.Queue.empty[SourceQueue[(String, Command)]]
-  
-  /** Given a Sink, creates a source queue such that it can publish to that sink by pushing to the queue */
-  def registerStream[Mat](sink:Sink[(String, Command), Mat]) = {
-    val source = Source.queue[(String, Command)](10, OverflowStrategy.backpressure)
-    val res = source.to(sink).run()
-    streams.enqueue(res)
-  }
+      // Add this buffer to our state, so we push to this buffer whenever a new `(name, command)` pair comes in
+      commandStreamBehaviour(subscribers.enqueue(buffer))
 
-  def receive = {
-
-    case RegisterStreamSink(sink) =>
-      // Register a new sink
-      log.info("Registered a stream from {}", sender().path)
-      registerStream(sink)
-
-    case c:Command =>
-      // If we receive a lone command, the sender is the tank. Look them up by asking the GameActor
-      // Then push the command to all the queues (that sends them out on the streams)
-      for {
-        optionTank <- (Main.gameActor ? WhoIs(sender())).mapTo[Option[String]]
-        tank <- optionTank
-        q <- streams
-      } {
-        q.offer(tank, c)
-      }
-
-    case (tank:String, c:Command) =>
-      // We also support receiving a tuple containing a tank name and a command
-      for { q <- streams } q.offer(tank, c)
-
-  }
+    case (n, c:Command) => 
+      // Send the message out to every subscribed queue
+      for s <- subscribers do s.push(n -> c)
+      
+      // We continue with the same behaviour, so do not return a new message handler
 
 }
+
+val commandStreamActor = troupe.spawn(commandStreamBehaviour(Queue.empty))

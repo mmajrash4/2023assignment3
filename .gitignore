@@ -32,4 +32,9 @@ vagrant/sbt-launch.jar
 
 tmp
 
+
 .bsp/
+.metals/
+.vscode/
+project/metals.sbt
+project/project

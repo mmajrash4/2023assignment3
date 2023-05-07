@@ -3,13 +3,16 @@ package cosc250.roboScala.ui
 import java.awt._
 import javax.swing.JPanel
 
-import cosc250.roboScala._
+import cosc250.roboScala.*
+import game.*
+
+import TankCommand.*
 
 /**
   * A panel for painting our tanks. Notice that gameState is call-by-name -- it
   * will re-query the variable each time.
   */
-class GamePanel(gameState: => GameState) extends JPanel {
+class GamePanel(gameState: => GameState, commands: => Map[String, Seq[Command]]) extends JPanel {
 
   val bg:Color = Color.DARK_GRAY
 
@@ -112,7 +115,7 @@ class GamePanel(gameState: => GameState) extends JPanel {
 
     // Paint the tanks
     for { t <- gameState.tanks  } {
-      drawTank(t, gameState.commands.getOrElse(t.name, Set.empty))
+      drawTank(t, commands.getOrElse(t.name, Seq.empty).toSet)
     }
 
     // Paint the shells
@@ -121,7 +124,7 @@ class GamePanel(gameState: => GameState) extends JPanel {
     // Draw the radar cones for any radars that are pinging this tick
     for {
       t <- gameState.tanks if {
-        t.canPing && gameState.commands.getOrElse(t.name, Set.empty).contains(RadarPing)
+        t.canPing && commands.getOrElse(t.name, Seq.empty).contains(RadarPing)
       }
     } drawRadarCone(t)
 

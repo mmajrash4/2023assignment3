@@ -1,4 +1,4 @@
-package cosc250.roboScala
+package cosc250.roboScala.game
 
 import java.awt.Shape
 import java.awt.geom.{AffineTransform, Rectangle2D}
@@ -21,7 +21,7 @@ case class Shell(firedBy:String, position:Vec2, velocity:Vec2) {
   }
 
   /** Called by the GameActor to work out where the shell moves next */
-  def update(dt:Double):Shell = copy(position = position + velocity * dt)
+  def updated(dt:Double):Shell = copy(position = position + velocity * dt)
 
 }
 

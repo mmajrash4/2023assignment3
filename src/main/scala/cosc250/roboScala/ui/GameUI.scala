@@ -4,20 +4,24 @@ import java.awt.BorderLayout
 import java.awt.event.ActionEvent
 import javax.swing._
 
-import akka.stream.scaladsl.Sink
-import cosc250.roboScala._
+import cosc250.roboScala.*
+import game.*
 
 import scala.collection.mutable
 
+
 /** The UI for a game. Note that it takes a by-name argument. */
-class GameUI(gameState: => GameState, commands: => Map[String, Set[Command]]) {
+object GameUI {
+
+  @volatile var gameState:GameState = GameState.empty
+  @volatile var commands:Map[String, Seq[Command]] = Map.empty
 
   // Draws the tanks, etc
-  val gamePanel = new GamePanel(gameState)
+  val gamePanel = new GamePanel(gameState, commands)
 
   // Starts the game
   val startButton = new JButton("Start game!")
-  startButton.addActionListener((e:ActionEvent) => Main.startGame())
+  startButton.addActionListener((e:ActionEvent) => startGame())
 
   /** The eastern panel, showing the log of message */
   val messagesPanel = new Box(BoxLayout.Y_AXIS)
@@ -32,7 +36,7 @@ class GameUI(gameState: => GameState, commands: => Map[String, Set[Command]]) {
   val insultsFilterButton = new JButton("Insults")
   insultsFilterButton.addActionListener { (_) =>
     messageFilter = {
-      case (_, _:InsultCommand) => true
+      case (_, _:InsultsCommand) => true
       case _ => false
     }
     updateLog()
@@ -41,6 +45,8 @@ class GameUI(gameState: => GameState, commands: => Map[String, Set[Command]]) {
   /** Filters the message pane so that only fires and shots are shown */
   val hitFilterButton = new JButton("Shot actions")
   hitFilterButton.addActionListener { (_) =>
+
+    import TankCommand.*
     messageFilter = {
       case (_, TakeHit) => true
       case (_, Fire) => true
@@ -79,7 +85,7 @@ class GameUI(gameState: => GameState, commands: => Map[String, Set[Command]]) {
   /** Called by the game actor to request the game panel be repainted */
   def repaint():Unit = {
     val commands = this.commands
-    for { p <- commandPanels } p.update(commands.getOrElse(p.name, Set.empty))
+    for { p <- commandPanels } p.update(commands.getOrElse(p.name, Seq.empty).toSet)
 
     gamePanel.repaint()
   }
@@ -110,6 +116,9 @@ class GameUI(gameState: => GameState, commands: => Map[String, Set[Command]]) {
       for {
         (tank, command) <- messages if messageFilter(tank, command)
       } {
+        import InsultsCommand.* 
+        import TankCommand.* 
+        
         command match {
           case Insult(t, insult) =>
             buf.append(s"$tank insults $t \n")
