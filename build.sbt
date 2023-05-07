@@ -8,7 +8,7 @@ lazy val root = (project in file(".")).
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= Seq(
-  "com.wbillingsley" %% "amdram" % "0.0.0+6-099e455a-SNAPSHOT"
+  "com.wbillingsley" %% "amdram" % "0.0.0+10-993bfbd8-SNAPSHOT"
 )
 
 libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test

@@ -97,8 +97,12 @@ def gameHandler(
 
       val tank = Tank.random(name, color)
 
+      trace(s"Tanks werwe ${state.tanks}")
       val newState = state.copy(tanks = state.tanks :+ tank)
       val actor = context.spawn(launchMethod(name))
+
+      info(s"Registered $name")
+      trace(s"Tanks are ${newState.tanks}")
 
       ui.GameUI.addTank(name)
       ui.GameUI.gameState = newState

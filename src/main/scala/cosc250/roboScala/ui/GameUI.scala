@@ -68,7 +68,7 @@ object GameUI {
   /** Called by the game actor to request the game panel be repainted */
   def repaint():Unit = {
     val commands = this.commands
-    for { p <- commandPanels } p.update(commands.getOrElse(p.name, Seq.empty).toSet)
+    for { p <- commandPanels.toSeq } p.update(commands.getOrElse(p.name, Seq.empty).toSet)
 
     gamePanel.repaint()
   }
