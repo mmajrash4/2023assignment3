@@ -52,8 +52,7 @@ object Insults {
     // Forward the command to the commandStream for the UI
     streamActor ! (sender -> command)
 
-    println(s"${command.tank} throws shade on $sender : ${command.insult}")
-
+    info(s"$sender throws shade on ${command.tank} : ${command.insult}")
     
     for {
       insulted <- gameActor.ask[GameControl.LookUp, Recipient[Message]](r => GameControl.LookUp(r, command.tank))

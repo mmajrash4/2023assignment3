@@ -212,11 +212,10 @@ First, add `InsultingDuck` to your game (in Main):
 Take a look at its code.
 
 InsultingDuck won't try to fight normally. Instead, it will periodically send
-insults via the InsultsActor. These are then sent to tanks as an `Insulted(insult)` message.
-
-Because `InsultsActor` uses the `ask` pattern, tanks receive this from a
-*temporary actor that the InsultsActor creates specifically for handling replies*. 
+insults via the `insultsReferee`. These are then sent to tanks as an `Insulted(replyTo, insult)` message.
 The address to send a reply to is included in the message. 
+(Because `insultsReferee` uses the `ask` pattern, tanks receive this from a
+*temporary actor that the InsultsActor creates specifically for handling replies*.)
 
 The task is to alter your tank so that when it receives an insult, it fires back
 a devastatingly witty retort. This needs to be an `InsultsCommand.Retort` , with the correct

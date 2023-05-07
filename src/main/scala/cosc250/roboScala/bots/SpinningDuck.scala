@@ -23,7 +23,7 @@ def spinningDuck(name:String):MessageHandler[Message] = MessageHandler { (msg, c
       gameActor ! (name, TankCommand.FullSpeedAhead)
 
       // If we have enough energy to ping and shoot, ping
-      if (me.energy > Tank.radarPower + Shell.energy) gameActor ! (name, TankCommand.RadarPing)
+      if (me.energy > 80) gameActor ! (name, TankCommand.RadarPing)
 
       gameActor ! (name, TankCommand.TurnClockwise)
       gameActor ! (name, TankCommand.TurretClockwise)

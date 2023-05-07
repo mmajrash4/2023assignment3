@@ -37,8 +37,8 @@ class CommandPanel(val name:String) extends JPanel {
     new CommandLabel(TurretClockwise),
     new CommandLabel(RadarAnticlockwise),
     new CommandLabel(RadarClockwise),
-    new CommandLabel(RadarPing),
-    new CommandLabel(Fire),
+    //new CommandLabel(RadarPing),
+    //new CommandLabel(Fire),
   )
 
   val gridPanel = new JPanel(new GridLayout(5, 2, 4, 4))

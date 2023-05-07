@@ -26,8 +26,7 @@ case class GameState(tanks:Seq[Tank], shells:Seq[Shell]) {
     
     val messages = mutable.Buffer.empty[(String, Message)]
 
-    // Handle hits. Each hit tank has a TakeHit command added, and we remember the shells
-    // in order to remove them from the field (later)
+    // Handle hits 
     val hits = for {
       s <- shells
       t <- tanks if t.hitBy(s)
@@ -37,8 +36,8 @@ case class GameState(tanks:Seq[Tank], shells:Seq[Shell]) {
 
       (t, s)
     }
-    def hitTanks = hits.map(_._1)
-    def hitShells = hits.map(_._2)
+    lazy val hitTanks = hits.map(_._1)
+    lazy val hitShells = hits.map(_._2)
 
     // Handle misses. For each shell that has gone out of bounds, we notify the player
     // who fired it. We remember these shells in order to remove them from the field (later)

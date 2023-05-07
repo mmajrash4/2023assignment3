@@ -57,6 +57,9 @@ def gameHandler(
       ui.GameUI.commands = Map.empty
       ui.GameUI.repaint()
 
+      val alive = for t <- state.tanks if t.isAlive yield t.name
+      for t <- alive do players(t) ! Message.TanksAlive(alive)
+
       // Return a handler with the updated time, so we measure the next tick correctly
       gameHandler(players, state, queued, time)
 

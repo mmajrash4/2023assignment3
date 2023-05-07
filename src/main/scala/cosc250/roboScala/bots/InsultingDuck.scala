@@ -27,7 +27,7 @@ def insultingDuck(name:String, otherTanks:Seq[String]):MessageHandler[Message] =
     case Message.TanksAlive(tanks) =>
       // Whenever the set of alive tanks changes (eg, start of game or a tank dies) we get a message with the names
       // of all the remaining tanks. Remove ourselves, so we don't insult ourself.
-      trace(s"Living tanks are ${tanks}")
+      info(s"Living tanks are ${tanks}")
 
       // We need to update our state, because there's a different set of tanks on the field
       insultingDuck(name, tanks.filter(_ != name))

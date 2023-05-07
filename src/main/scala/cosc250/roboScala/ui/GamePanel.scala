@@ -20,7 +20,7 @@ class GamePanel(gameState: => GameState, commands: => Map[String, Seq[Command]])
 
   val turretColor:Color = Color.lightGray
 
-  val radarConeColor = new Color(1.0f, 1.0f, 1.0f, 0.25f)
+  val radarConeColor = new Color(1.0f, 1.0f, 1.0f, 0.15f)
 
   override def getPreferredSize = new Dimension(GameState.width, GameState.height)
 
