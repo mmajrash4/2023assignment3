@@ -1,4 +1,4 @@
-package cosc250.roboScala.game
+package roboScala.game
 
 import com.wbillingsley.amdram.*
 

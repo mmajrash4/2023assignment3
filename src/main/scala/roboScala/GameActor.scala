@@ -1,4 +1,4 @@
-package cosc250.roboScala
+package roboScala
 
 import javax.swing._
 import java.util.{Timer, TimerTask}

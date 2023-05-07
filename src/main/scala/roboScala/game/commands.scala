@@ -1,9 +1,9 @@
-package cosc250.roboScala.game
+package roboScala.game
 
 import java.awt.Color
 import scala.util.Random
 
-import cosc250.roboScala.*
+import roboScala.*
 
 /** Commands are sent by AI Players to the Game Actor */
 sealed trait Command

@@ -1,9 +1,9 @@
-package cosc250.roboScala.ui
+package roboScala.ui
 
 import java.awt.{Color, GridLayout}
 import javax.swing.{BoxLayout, JLabel, JPanel}
 
-import cosc250.roboScala.* 
+import roboScala.* 
 import game.*
 
 import TankCommand.*

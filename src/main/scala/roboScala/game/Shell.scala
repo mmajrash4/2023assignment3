@@ -1,4 +1,4 @@
-package cosc250.roboScala.game
+package roboScala.game
 
 import java.awt.Shape
 import java.awt.geom.{AffineTransform, Rectangle2D}

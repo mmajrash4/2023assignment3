@@ -1,4 +1,4 @@
-package cosc250.roboScala
+package roboScala
 
 enum LogLevel:
     case Trace

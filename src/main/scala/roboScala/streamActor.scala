@@ -1,10 +1,10 @@
-package cosc250.roboScala
+package roboScala
 
 import com.wbillingsley.amdram.* 
 import iteratees.*
 import scala.collection.immutable.Queue
 
-import cosc250.roboScala.*
+import roboScala.*
 import game.*
 
 import scala.concurrent.*

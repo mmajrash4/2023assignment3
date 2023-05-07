@@ -1,10 +1,10 @@
-package cosc250.roboScala.bots
+package roboScala.bots
 
 import java.awt.Color
 
 import com.wbillingsley.amdram.*
 
-import cosc250.roboScala.*
+import roboScala.*
 import game.*
 
 import scala.util.Random

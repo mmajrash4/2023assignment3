@@ -1,4 +1,4 @@
-package cosc250.roboScala
+package roboScala
 
 import java.awt.BorderLayout
 import javax.swing.{JFrame, JPanel}
@@ -12,7 +12,7 @@ import scala.concurrent.*
 import ExecutionContext.Implicits.global
 
 import game.*
-import cosc250.roboScala.RegisterSink
+import roboScala.RegisterSink
 
 /**
   * The actor system is a top-level "given" instance so that it is automatically found where it

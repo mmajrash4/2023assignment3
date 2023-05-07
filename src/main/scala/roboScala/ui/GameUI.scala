@@ -1,10 +1,10 @@
-package cosc250.roboScala.ui
+package roboScala.ui
 
 import java.awt.BorderLayout
 import java.awt.event.ActionEvent
 import javax.swing._
 
-import cosc250.roboScala.*
+import roboScala.*
 import game.*
 
 import com.wbillingsley.amdram.* 

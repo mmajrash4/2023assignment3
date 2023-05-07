@@ -1,4 +1,4 @@
-package cosc250.roboScala
+package roboScala
 
 import com.wbillingsley.amdram.*
 import game.* 
@@ -52,7 +52,7 @@ object Insults {
     // Forward the command to the commandStream for the UI
     streamActor ! (sender -> command)
 
-    info(s"$sender throws shade on ${command.tank} : ${command.insult}")
+    info(s"$sender taunts ${command.tank} : ${command.insult}")
     
     for {
       insulted <- gameActor.ask[GameControl.LookUp, Recipient[Message]](r => GameControl.LookUp(r, command.tank))
