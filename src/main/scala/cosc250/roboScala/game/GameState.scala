@@ -28,15 +28,17 @@ case class GameState(tanks:Seq[Tank], shells:Seq[Shell]) {
 
     // Handle hits. Each hit tank has a TakeHit command added, and we remember the shells
     // in order to remove them from the field (later)
-    val hitShells = for {
+    val hits = for {
       s <- shells
       t <- tanks if t.hitBy(s)
     } yield {
       messages.append(s.firedBy -> YouHit(t))
       messages.append(t.name -> YouWereHit)
 
-      s
+      (t, s)
     }
+    def hitTanks = hits.map(_._1)
+    def hitShells = hits.map(_._2)
 
     // Handle misses. For each shell that has gone out of bounds, we notify the player
     // who fired it. We remember these shells in order to remove them from the field (later)
@@ -49,14 +51,15 @@ case class GameState(tanks:Seq[Tank], shells:Seq[Shell]) {
       s
     }
 
-    // Now we've added the TakeHit command where necessary, we apply commands to tanks
-    // to update their state.
+    // Update tanks' states
     val newTanks = for {
       t <- tanks
     } yield {
       // Only alive tanks are updated. Dead tanks remain unchanged (but are not filtered out)
       if (t.isAlive) {
-        t.updated(dt, commands.getOrElse(t.name, Seq.empty))
+        // Augment the commands list for this tank with any hits it's taken
+        val tankCommands = commands.getOrElse(t.name, Seq.empty) ++ (for hit <- hitTanks if hit == t yield TankCommand.TakeHit)
+        t.updated(dt, tankCommands)
       } else t
     }
 

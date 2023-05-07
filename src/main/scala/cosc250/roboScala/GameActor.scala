@@ -1,12 +1,14 @@
 package cosc250.roboScala
 
 import javax.swing._
+import java.util.{Timer, TimerTask}
 
 import com.wbillingsley.amdram.*
 import game.*
 
 import scala.collection.mutable
 import scala.util.Random
+
 
 /** The time of the last step we processed */
 @volatile var lastTime = System.currentTimeMillis()
@@ -49,24 +51,39 @@ def gameHandler(
 
     // Indicates the game is ready to show on the UI. Also sent before the first tick
     case GameControl.Ready(time) => 
+      trace(s"Ready received")      
+
+      ui.GameUI.gameState = state
+      ui.GameUI.commands = Map.empty
+      ui.GameUI.repaint()
+
       // Return a handler with the updated time, so we measure the next tick correctly
       gameHandler(players, state, queued, time)
 
 
     // A tick moves the game forward
     case GameControl.Tick(time) =>
+      
       // Step the game forward
       val dt = (time - lastTime) / 1000.0
+      trace(s"Tick received for $dt ms")      
+
       val tankCommands = queued.reverse.groupMap(_._1)(_._2)
       val (newState, messages) = state.step(dt, tankCommands)
 
       // Update the GameUI
       ui.GameUI.gameState = newState
       ui.GameUI.commands = tankCommands
+      ui.GameUI.repaint()
 
       // Send any resulting messages
       for (name, message) <- messages do
         players(name) ! message
+        streamActor ! (name, message)
+
+      // Tell the players what their state is. This should prompt tanks to respond with
+      // their next commands.
+      for t <- newState.tanks do players(t.name) ! Message.TankState(t)
 
       // return a handler for the new state
       gameHandler(players, newState, List.empty, time)
@@ -81,6 +98,7 @@ def gameHandler(
       val actor = context.spawn(launchMethod(name))
 
       ui.GameUI.addTank(name)
+      ui.GameUI.gameState = newState
       ui.GameUI.repaint()
 
       gameHandler(players + (name -> actor), newState, queued, lastTime)
@@ -88,14 +106,31 @@ def gameHandler(
     case GameControl.LookUp(replyTo, name) =>
       if players.contains(name) then 
         replyTo ! players(name)
-      else println(s"Error - asked for $name which doesn't exist")
+      else error(s"Asked for $name which doesn't exist")
 
     case (name, c:TankCommand) => 
+      // pass it on to the command stream 
+      streamActor ! (name, c)
+
       // Queue the command to handle it on the next tick
       gameHandler(players, state, (name -> c) :: queued, lastTime)
 
+}
 
+/* A timer that will send tick messages */
+val timer = new Timer
 
+/** Called by the button on the GameUI */
+def startGame():Unit = {
+  val task = new TimerTask {
+    def run():Unit = { gameActor ! GameControl.Tick(System.currentTimeMillis()) }
+  }
+
+  // Tell the game actor the time now
+  gameActor ! GameControl.Ready(System.currentTimeMillis())
+
+  // Start the timer
+  timer.schedule(task, 16L, 16L)
 }
 
 

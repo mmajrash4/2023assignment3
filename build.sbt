@@ -16,3 +16,5 @@ libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
 // We also need to register munit as a test framework in sbt so that "sbt test" will work and the IDE will recognise
 // tests
 testFrameworks += new TestFramework("munit.Framework")
+
+Compile / run / fork := true

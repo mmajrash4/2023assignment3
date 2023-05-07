@@ -1,17 +1,18 @@
 package cosc250.roboScala
 
 import java.awt.BorderLayout
-import java.util.{Timer, TimerTask}
 import javax.swing.{JFrame, JPanel}
 
 import java.awt.Color
 
 import com.wbillingsley.amdram.* 
+import iteratees.*
 
 import scala.concurrent.* 
 import ExecutionContext.Implicits.global
 
 import game.*
+import cosc250.roboScala.RegisterSink
 
 /**
   * The actor system is a top-level "given" instance so that it is automatically found where it
@@ -19,16 +20,6 @@ import game.*
   */
 given troupe:Troupe = SingleEcTroupe()
 
-/* A timer that will send tick messages */
-val timer = new Timer
-
-/** Called by the button on the GameUI */
-def startGame():Unit = {
-  val task = new TimerTask {
-    def run():Unit = { gameActor ! GameControl.Tick(System.currentTimeMillis()) }
-  }
-  timer.schedule(task, 16L, 16L)
-}
 
 @main def main() = {
 

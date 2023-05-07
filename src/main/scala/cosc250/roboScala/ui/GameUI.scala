@@ -7,6 +7,12 @@ import javax.swing._
 import cosc250.roboScala.*
 import game.*
 
+import com.wbillingsley.amdram.* 
+import iteratees.*
+
+import scala.concurrent.*
+import ExecutionContext.Implicits.global
+
 import scala.collection.mutable
 
 
@@ -21,7 +27,10 @@ object GameUI {
 
   // Starts the game
   val startButton = new JButton("Start game!")
-  startButton.addActionListener((e:ActionEvent) => startGame())
+  startButton.addActionListener((e:ActionEvent) =>     
+    registerCommandStream()
+    startGame()
+  )
 
   /** The eastern panel, showing the log of message */
   val messagesPanel = new Box(BoxLayout.Y_AXIS)
@@ -29,40 +38,14 @@ object GameUI {
   messageTextArea.setLineWrap(true)
   messageTextArea.setWrapStyleWord(true)
   messageTextArea.setColumns(20)
-  val messages:mutable.Queue[(String, Command)] = mutable.Queue.empty
-  var messageFilter: (String, Command) => Boolean = (_, _) => true
 
-  /** Filters the message pane so that only insults are shown */
-  val insultsFilterButton = new JButton("Insults")
-  insultsFilterButton.addActionListener { (_) =>
-    messageFilter = {
-      case (_, _:InsultsCommand) => true
-      case _ => false
-    }
-    updateLog()
-  }
+  val messages:mutable.Queue[String] = mutable.Queue.empty
 
-  /** Filters the message pane so that only fires and shots are shown */
-  val hitFilterButton = new JButton("Shot actions")
-  hitFilterButton.addActionListener { (_) =>
-
-    import TankCommand.*
-    messageFilter = {
-      case (_, TakeHit) => true
-      case (_, Fire) => true
-      case _ => false
-    }
-    updateLog()
-  }
 
   val filters = new Box(BoxLayout.LINE_AXIS)
-  filters.add(insultsFilterButton)
-  filters.add(hitFilterButton)
   messagesPanel.add(filters)
   messagesPanel.add(messageTextArea)
   messagesPanel.add(Box.createGlue())
-
-  register()
 
   /** The western panel, holding the state of all the tanks */
   private val commandsPanel = new Box(BoxLayout.Y_AXIS)
@@ -101,51 +84,57 @@ object GameUI {
   }
 
   /** Pushes a command from a tank into the commands that will be rendered. */
-  def pushCommand(t:String, c:Command):Unit = {
-    if (messageFilter(t,c)) {
-      messages.enqueue((t, c))
-      if (messages.lengthCompare(12) > 0) messages.dequeue()
-      updateLog()
-    }
+  def pushCommentary(s:String):Unit = {
+    messages.enqueue(s)
+    if (messages.lengthCompare(12) > 0) messages.dequeue()
+    updateLog()
   }
 
   /** Updates the messageTextArea to display the commands in the log */
   def updateLog():Unit = {
+    val text = messages.mkString("\n")
+
     SwingUtilities.invokeLater { () =>
-      val buf = new mutable.StringBuilder
-      for {
-        (tank, command) <- messages if messageFilter(tank, command)
-      } {
-        import InsultsCommand.* 
-        import TankCommand.* 
-        
-        command match {
-          case Insult(t, insult) =>
-            buf.append(s"$tank insults $t \n")
-            buf.append(insult)
-            buf.append("\n\n")
-          case Retort(insult) =>
-            buf.append(s"$tank retorts \n")
-            buf.append(insult)
-            buf.append("\n\n")
-          case TakeHit =>
-            buf.append(s"$tank got hit!\n")
-          case Fire =>
-            buf.append(s"$tank fires a shell...\n")
-          case _ =>
-            buf.append(s"$tank command \n") // do nothing
-        }
-      }
-      messageTextArea.setText(buf.mkString)
+      messageTextArea.setText(text)
       messageTextArea.repaint()
     }
   }
 
-  def register() = {
-    // TODO: you need to implement this!
-    // Send Main.commandStreamActor a RegisterStreamSink message, with a Sink that will call pushCommand(tank, command)
+
+  val commentator:Transformer[(String, Command | Message), String] = {
+    case Input.Datum((name, c)) => c match {
+      case TankCommand.Fire => Some(Input.Datum(s"$name fires a shot"))
+      case Message.YouMissed(_) =>  Some(Input.Datum(s"$name's shell goes into the ground"))
+      case Message.YouHit(t) =>  Some(Input.Datum(s"$name scores a mighty hit on ${t.name}"))
+      case Message.RadarResult(_, tanks) if tanks.nonEmpty => Some(Input.Datum(s"$name spots ${tanks.map(_.name).mkString(", ")}"))
+      case InsultsCommand.Insult(t, insult) => Some(Input.Datum(s"$name sneers at $t and says '$insult'"))
+      case InsultsCommand.Retort(retort) => Some(Input.Datum(s"$name replies '$retort'"))
+      case TankCommand.TakeHit => Some(Input.Datum(s"$name took a hit"))
+      case _ => None
+    }
+    case x => None
   }
 
+
+  def registerCommandStream() = {
+    object CommandSink extends Iteratee[String, Unit] {
+      override def accept(el:Input[String]) = { 
+        
+        el match
+          case Input.Datum(text) =>
+            ui.GameUI.pushCommentary(text)
+            Future.successful(RequestState.Continue(this))
+          case Input.Error(x) =>
+            error(x.getMessage())
+            Future.successful(RequestState.Done(()))
+          case Input.EndOfStream => 
+            Future.successful(RequestState.Done(()))
+      }
+      
+    }
+
+    streamActor ! RegisterSink(AdaptedIteratee(CommandSink)(commentator))
+  }
 
 
 

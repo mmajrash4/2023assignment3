@@ -13,10 +13,10 @@ import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
 
 
-case class RegisterSink(iter:Iteratee[(String, Command),_])
+case class RegisterSink(iter:Iteratee[(String, Command | Message),_])
 
 /**
-  * The commandStreamActor is responsible for sending out a listenable stream of every tank command happening 
+  * The streamActor is responsible for sending out a listenable stream of every tank command and message happening 
   * in the game. It is defined by this behaviour:
   *
   * For every subscriber request, it maintains an unbounded queue. This means that whenever a 
@@ -27,25 +27,27 @@ case class RegisterSink(iter:Iteratee[(String, Command),_])
   * @param ec
   * @return
   */
-def commandStreamBehaviour(
-  subscribers:Queue[UnboundedBuffer[(String, Command)]]
+def streamBehaviour(
+  subscribers:Queue[UnboundedBuffer[(String, Command | Message)]]
 )(
   using ec:ExecutionContext
-):MessageHandler[(String, Command) | RegisterSink] = MessageHandler { (msg, context) =>
+):MessageHandler[(String, Command | Message) | RegisterSink] = MessageHandler { (msg, context) =>
 
   msg match 
     case RegisterSink(iter) =>
+      info("Registered the command stream")
+
       // Create a new buffer for this recipient (because it might not process messages quickly)
       // This buffer will do its work sending the messages on to recipients on an implicit execution context
-      val buffer = UnboundedBuffer[(String, Command)]()
+      val buffer = UnboundedBuffer[(String, Command | Message)]()
 
       // Tell the buffer to send out every message it receives to the subscriber
       buffer.foldOver(iter)
 
       // Add this buffer to our state, so we push to this buffer whenever a new `(name, command)` pair comes in
-      commandStreamBehaviour(subscribers.enqueue(buffer))
+      streamBehaviour(subscribers.enqueue(buffer))
 
-    case (n, c:Command) => 
+    case (n, c:(Command | Message)) => 
       // Send the message out to every subscribed queue
       for s <- subscribers do s.push(n -> c)
       
@@ -53,4 +55,6 @@ def commandStreamBehaviour(
 
 }
 
-val commandStreamActor = troupe.spawn(commandStreamBehaviour(Queue.empty))
+val streamActor = troupe.spawn(streamBehaviour(Queue.empty))
+
+

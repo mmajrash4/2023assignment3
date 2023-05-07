@@ -3,8 +3,8 @@ package cosc250.roboScala
 import com.wbillingsley.amdram.*
 import game.* 
 
-import scala.concurrent.Future
-import scala.concurrent.duration._
+import scala.concurrent.*
+import ExecutionContext.Implicits.global
 
 
 /**
@@ -43,35 +43,35 @@ object Insults {
     sender ! SmartAlecCommand.Retort(insultsAndRetorts.getOrElse(command.insult, "I am rubber, you are glue!"))
   }
 
+
+  /**
+    * The insults actor handles the "tankfighting with insults" part of the game.
+    */
   val insultsReferee = troupe.spawnLoop[(String, InsultsCommand.Insult)] { (sender, command) =>
     
     // Forward the command to the commandStream for the UI
-    commandStreamActor ! (sender -> command)
+    streamActor ! (sender -> command)
 
     println(s"${command.tank} throws shade on $sender : ${command.insult}")
 
-    /*
-    val aa = gameActor.ask(r => GameControl.LookUp(r, command.tank))
-    println(aa)
-
-
+    
     for {
-      insulted:Recipient[Message] <- gameActor.ask(r => GameControl.LookUp(r, command.tank))
-      response:InsultsCommand.Retort <- insulted.ask(r => Message.Insulted(r, command.insult))
+      insulted <- gameActor.ask[GameControl.LookUp, Recipient[Message]](r => GameControl.LookUp(r, command.tank))
+      response <- insulted.ask[Message.Insulted, InsultsCommand.Retort](r => Message.Insulted(r, command.insult))
     } do {
-        commandStreamActor ! (command.tank, response)
-        println(s"${command.tank} responds: ${response.retort}")
+      streamActor ! (command.tank, response)
+      println(s"${command.tank} responds: ${response.retort}")
 
-        if insultsAndRetorts.get(command.insult).contains(response.retort) then 
-          println(s"The retort was right! Insulter $sender takes the hit!")
-          gameActor ! (sender -> TankCommand.TakeHit)
-        else
-          println(s"The retort was wrong! Target ${command.tank} takes the hit!")
-          gameActor ! (command.tank -> TankCommand.TakeHit)
+      if insultsAndRetorts.get(command.insult).contains(response.retort) then 
+        println(s"The retort was right! Insulter $sender takes the hit!")
+        gameActor ! (sender -> TankCommand.TakeHit)
+      else
+        println(s"The retort was wrong! Target ${command.tank} takes the hit!")
+        gameActor ! (command.tank -> TankCommand.TakeHit)
 
-      }
+    }
 
-      */
+    
   }
 
   /** The canonical list of insults and retorts */
@@ -134,7 +134,3 @@ object Insults {
 
 
 }
-
-/**
-  * The insults actor handles the "tankfighting with insults" part of the game.
-  */
