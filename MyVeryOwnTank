@@ -1,0 +1,56 @@
+class MyVeryOwnTank {
+
+  // Properties
+  var currentPosition: (Int, Int) = (0, 0)
+  var targetPosition: (Int, Int) = (0, 0)
+  var isMoving: Boolean = false
+  
+  // Methods
+  
+  // Move the tank to the target position
+  def moveTo(target: (Int, Int)): Unit = {
+    targetPosition = target
+    isMoving = true
+    // Logic to calculate the path and move the tank
+    // ...
+    println("Moving to target position: " + targetPosition)
+  }
+  
+  // Fire the tank's main cannon
+  def fireMainCannon(): Unit = {
+    // Logic to calculate the firing trajectory and damage
+    // ...
+    println("Firing main cannon!")
+  }
+  
+  // Activate the tank's secondary weapon system
+  def activateSecondaryWeapons(): Unit = {
+    // Logic to engage secondary weapons
+    // ...
+    println("Secondary weapons activated!")
+  }
+  
+  // Update the tank's position and perform actions
+  def update(): Unit = {
+    if (isMoving) {
+      // Logic to update the tank's position
+      // ...
+      println("Tank position updated: " + currentPosition)
+      
+      // Check if the tank has reached the target position
+      if (currentPosition == targetPosition) {
+        isMoving = false
+        fireMainCannon()
+        activateSecondaryWeapons()
+      }
+    }
+  }
+}
+
+// Create an instance of MyVeryOwnTank
+val tank = new MyVeryOwnTank()
+
+// Demo the tank's actions
+tank.moveTo((10, 20))
+tank.update()
+tank.update()
